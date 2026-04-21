@@ -71,32 +71,40 @@ html, body {
 .hero-ui button:hover { transform: translateY(-1px); }
 .hero-ui button:active { transform: translateY(1px); }
 
-@media (max-width: 1024px) {
+/* Extra Large Devices */
+@media (min-width: 1200px) {
   .hero-ui {
-    width: min(720px, calc(100% - 40px));
+    width: min(920px, calc(100% - 40px));
   }
 }
 
-@media (max-width: 768px) {
+/* Desktop */
+@media (min-width: 992px) and (max-width: 1199.98px) {
   .hero-ui {
-    bottom: 24px;
-    width: calc(100% - 32px);
-    gap: 8px;
+    width: min(800px, calc(100% - 40px));
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .hero-ui {
+    bottom: 28px;
+    width: calc(100% - 40px);
+    gap: 10px;
   }
 
   .hero-ui input {
-    height: 50px;
+    height: 52px;
     font-size: 16px;
-    padding: 0 14px;
   }
 
   .hero-ui button {
-    height: 50px;
-    padding: 0 18px;
+    height: 52px;
   }
 }
 
-@media (max-width: 480px) {
+/* Mobile */
+@media (max-width: 575.98px) {
   .hero-ui {
     bottom: 32px;
     flex-direction: column;
