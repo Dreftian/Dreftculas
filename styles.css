@@ -113,6 +113,23 @@ html, body {
     width: calc(100% - 40px);
   }
 
+  /* Handle landscape mode on small screens */
+  @media (orientation: landscape) {
+    .hero-ui {
+      bottom: 12px;
+      flex-direction: row;
+      gap: 10px;
+      width: calc(100% - 32px);
+    }
+    
+    .hero-ui input,
+    .hero-ui button {
+      height: 44px;
+      font-size: 14px;
+      border-radius: 10px;
+    }
+  }
+
   .hero-ui input {
     height: 52px;
     width: 100%;

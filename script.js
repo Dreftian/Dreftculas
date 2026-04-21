@@ -168,8 +168,10 @@ function setTextTargets(text) {
   const off = document.createElement("canvas");
   const octx = off.getContext("2d");
 
-  const w = width < 576 ? width * 1.5 : Math.max(1100, Math.floor(width * 0.84));
-  const h = width < 576 ? height * 1.0 : Math.max(560, Math.floor(height * 0.62));
+  // Use a fixed resolution for the offscreen canvas that matches the viewport aspect ratio
+  const scale = 2.0; 
+  const w = Math.floor(width * scale);
+  const h = Math.floor(height * scale);
   off.width = w;
   off.height = h;
 
@@ -179,33 +181,40 @@ function setTextTargets(text) {
   octx.textBaseline = "middle";
 
   const exactText = clean;
-  const words = exactText.split(/\s+/).filter(Boolean);
-  const wordCount = words.length;
-  const targetLines =
-    exactText.length > 110 ? 5 :
-    exactText.length > 80 ? 4 :
-    exactText.length > 44 ? 3 :
-    exactText.length > 18 ? 2 : 1;
+  const isLandscape = width > height;
+  
+  // Dynamic line target based on text length and orientation
+  const targetLines = 
+    exactText.length > (isLandscape ? 120 : 80) ? 5 :
+    exactText.length > (isLandscape ? 80 : 44) ? 4 :
+    exactText.length > (isLandscape ? 40 : 18) ? 3 :
+    exactText.length > 12 ? 2 : 1;
 
-  const maxTextWidth = w * (targetLines === 1 ? 0.92 : (width < 576 ? 0.88 : 0.74));
-  const maxLines = Math.max(targetLines, Math.min(7, Math.ceil(wordCount / 2) + 1));
+  const padding = w * 0.1;
+  const maxTextWidth = w - padding * 2;
+  // Account for UI at the bottom (approx 120px on screen -> 120 * scale in offscreen)
+  const uiHeight = (width < 576 ? 140 : 80) * scale;
+  const maxTextHeight = h - uiHeight - padding;
 
-  let fontSize = width < 576 ? Math.min(120, w / (targetLines * 1.2)) : Math.min(150, w / (targetLines * 3.2));
+  let fontSize = (w / (targetLines * 2.5)) * scale;
+  if (isLandscape) fontSize = Math.min(fontSize, (h / (targetLines * 1.5)) * scale);
+  
   let lines = [];
 
-  while (fontSize >= 12) {
+  // Find the perfect font size
+  while (fontSize >= 10 * scale) {
     octx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
     lines = wrapText(octx, exactText, maxTextWidth);
 
-    const lineHeight = fontSize * 1.12;
-    const textHeight = lines.length * lineHeight;
+    const lineHeight = fontSize * 1.15;
+    const totalHeight = lines.length * lineHeight;
     const widest = lines.reduce((max, line) => Math.max(max, octx.measureText(line).width), 0);
 
-    if (lines.length <= maxLines && textHeight <= h * 0.85 && widest <= maxTextWidth) {
+    if (totalHeight <= maxTextHeight && widest <= maxTextWidth) {
       break;
     }
 
-    fontSize -= 2;
+    fontSize -= 1 * scale;
   }
 
   octx.clearRect(0, 0, w, h);
@@ -214,9 +223,11 @@ function setTextTargets(text) {
   octx.textAlign = "center";
   octx.textBaseline = "middle";
 
-  const lineHeight = fontSize * 1.12;
-  const totalHeight = lines.length * lineHeight;
-  const startY = h / 2 - totalHeight / 2 + lineHeight / 2;
+  const lineHeight = fontSize * 1.15;
+  const totalTextHeight = lines.length * lineHeight;
+  // Center vertically in the "safe area" (above UI)
+  const safeCenterY = (h - uiHeight) / 2;
+  const startY = safeCenterY - totalTextHeight / 2 + lineHeight / 2;
 
   for (let i = 0; i < lines.length; i++) {
     octx.fillText(lines[i], w / 2, startY + i * lineHeight);
@@ -224,15 +235,16 @@ function setTextTargets(text) {
 
   const image = octx.getImageData(0, 0, w, h).data;
   const rawPoints = [];
-  const step = width < 576 ? 2 : (lines.length >= 5 ? 2 : lines.length >= 3 ? 3 : 4);
+  // Adjust step based on font size to keep density consistent
+  const step = Math.max(2, Math.floor(fontSize / (20 * scale)));
 
   for (let y = 0; y < h; y += step) {
     for (let x = 0; x < w; x += step) {
       const alpha = image[(y * w + x) * 4 + 3];
-      if (alpha > 70) {
+      if (alpha > 120) {
         rawPoints.push({
-          x: cx - w / 2 + x,
-          y: cy - h / 2 + y,
+          x: x / scale,
+          y: y / scale,
         });
       }
     }
