@@ -33,9 +33,9 @@ function resize() {
 
   // Adjust particle count based on screen size for performance
   if (width < 480) {
-    COUNT = 6000;
+    COUNT = 8000;
   } else if (width < 768) {
-    COUNT = 9000;
+    COUNT = 10000;
   } else {
     COUNT = 14000;
   }
@@ -43,8 +43,12 @@ function resize() {
   if (!particles.length) {
     initParticles();
   } else {
-    // If count changes, we might need to re-init or trim, 
-    // but for now let's just update targets.
+    // Sync particle size if needed
+    const pSizeBase = width < 480 ? 1.8 : 1.35;
+    for (const p of particles) {
+      p.size = Math.random() * pSizeBase + 0.4;
+    }
+
     if (currentText.trim()) {
       setTextTargets(currentText);
     } else {
@@ -54,6 +58,7 @@ function resize() {
 }
 
 function initParticles() {
+  const pSizeBase = width < 480 ? 1.8 : 1.35;
   for (let i = 0; i < COUNT; i++) {
     particles.push({
       x: cx + rand(-180, 180),
@@ -62,7 +67,7 @@ function initParticles() {
       ty: cy,
       vx: 0,
       vy: 0,
-      size: Math.random() * 1.35 + 0.3,
+      size: Math.random() * pSizeBase + 0.4,
       alpha: Math.random() * 0.8 + 0.2,
       jitter: Math.random() * Math.PI * 2,
     });
@@ -163,8 +168,8 @@ function setTextTargets(text) {
   const off = document.createElement("canvas");
   const octx = off.getContext("2d");
 
-  const w = width < 480 ? width * 0.95 : Math.max(1100, Math.floor(width * 0.84));
-  const h = width < 480 ? height * 0.5 : Math.max(560, Math.floor(height * 0.62));
+  const w = width < 480 ? width * 1.5 : Math.max(1100, Math.floor(width * 0.84));
+  const h = width < 480 ? height * 1.0 : Math.max(560, Math.floor(height * 0.62));
   off.width = w;
   off.height = h;
 
@@ -182,13 +187,13 @@ function setTextTargets(text) {
     exactText.length > 44 ? 3 :
     exactText.length > 18 ? 2 : 1;
 
-  const maxTextWidth = w * (targetLines === 1 ? 0.92 : (width < 480 ? 0.95 : 0.74));
+  const maxTextWidth = w * (targetLines === 1 ? 0.92 : (width < 480 ? 0.88 : 0.74));
   const maxLines = Math.max(targetLines, Math.min(7, Math.ceil(wordCount / 2) + 1));
 
-  let fontSize = width < 480 ? Math.min(80, w / (targetLines * 1.5)) : Math.min(150, w / (targetLines * 3.2));
+  let fontSize = width < 480 ? Math.min(120, w / (targetLines * 1.2)) : Math.min(150, w / (targetLines * 3.2));
   let lines = [];
 
-  while (fontSize >= 16) {
+  while (fontSize >= 12) {
     octx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
     lines = wrapText(octx, exactText, maxTextWidth);
 
@@ -196,7 +201,7 @@ function setTextTargets(text) {
     const textHeight = lines.length * lineHeight;
     const widest = lines.reduce((max, line) => Math.max(max, octx.measureText(line).width), 0);
 
-    if (lines.length <= maxLines && textHeight <= h * 0.78 && widest <= maxTextWidth) {
+    if (lines.length <= maxLines && textHeight <= h * 0.85 && widest <= maxTextWidth) {
       break;
     }
 
@@ -219,7 +224,7 @@ function setTextTargets(text) {
 
   const image = octx.getImageData(0, 0, w, h).data;
   const rawPoints = [];
-  const step = lines.length >= 5 ? 2 : lines.length >= 3 ? 3 : 4;
+  const step = width < 480 ? 2 : (lines.length >= 5 ? 2 : lines.length >= 3 ? 3 : 4);
 
   for (let y = 0; y < h; y += step) {
     for (let x = 0; x < w; x += step) {
