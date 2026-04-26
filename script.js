@@ -346,24 +346,9 @@ function runLayoutTests() {
 button.addEventListener("click", applyText);
 
 input.addEventListener("input", () => {
-  if (!input.value.trim()) {
-    setSphereTargets();
-  }
+    if (input.value.trim()) {
+          applyText();
+    } else {
+          setSphereTargets();
+    }
 });
-
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    applyText();
-  }
-  if (e.key === "Escape") {
-    input.value = "";
-    setSphereTargets();
-  }
-});
-
-window.addEventListener("resize", resize);
-
-resize();
-runLayoutTests();
-animate();
